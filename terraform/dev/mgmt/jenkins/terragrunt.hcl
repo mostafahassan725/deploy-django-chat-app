@@ -1,5 +1,5 @@
 terraform {
-  source = "github.com/mostafahassan725/terraform-modules//mgmt/jenkins?ref=jenkins-v0.0.1"
+  source = "github.com/mostafahassan725/terraform-modules//mgmt/jenkins?ref=jenkins-v0.0.2"
 }
 
 include "root" {
@@ -14,7 +14,7 @@ inputs = {
 
   #ec2 specific variables
 
-  az = "eu-west-3a"
+  az        = "eu-west-3a"
   subnet_id = dependency.vpc.outputs.public_subnets_ids[0]
 
   #security groups specific variables
@@ -31,9 +31,9 @@ inputs = {
 }
 
 dependency "vpc" {
-  config_path  = "../../vpc"
-  mock_outputs        = {
-    public_subnets_ids[0] = "subnet-fakeid"
-    vpc_id = "fakevpcid"
-    }
+  config_path = "../../vpc"
+  mock_outputs = {
+    public_subnets_ids = ["subnet-fakeid1", "subnet-fakeid2"]
+    vpc_id             = "fakevpcid"
+  }
 }
