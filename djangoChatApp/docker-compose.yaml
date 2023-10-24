@@ -2,7 +2,9 @@ version: '3'
 services:
   web:
     container_name: myapp-web
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.web
     image: myapp-web:latest
     env_file:
       - .env
@@ -14,7 +16,9 @@ services:
       - django:/app/data
   asgi:
     container_name: myapp-asgi
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.asgi
     image: myapp-asgi:latest
     command: daphne -b 0.0.0.0 -p ${ASGI_PORT} djagoChatApp.asgi:application
     networks:
