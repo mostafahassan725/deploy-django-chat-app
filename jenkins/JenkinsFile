@@ -9,7 +9,7 @@ pipeline {
         }
         stage('Build Django image') {
             steps {
-                sh 'docker build -t djangoapp djangoApp/'
+                sh 'docker-compose -f djangoChatApp/docker-compose.yaml build --no-cache'
             }
         }
         stage('Push Django image to Docker hub') {
@@ -17,27 +17,26 @@ pipeline {
                 script {
                     withCredentials([string(credentialsId: 'dockerhub-password', variable: 'dockerhubpassword')]) {               
                         sh 'docker login -u mostafahassan724 -p ${dockerhubpassword}'
-                    }
-			        sh 'docker image tag djangoapp mostafahassan724/djangoapp'
-                    sh 'docker push mostafahassan724/djangoapp'
+                        sh 'docker-compose push web asgi'
                     }
                 }
+            }
         }
 
         stage('Push Django image to ECR') {
             steps {
                 script {
                     withCredentials([string(credentialsId: 'ecr-endpoint', variable: 'ecrendpoint')]) {
-                        sh 'aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ecrendpoint}'
-			            sh 'docker image tag djangoapp ${ecrendpoint}'
-                        sh 'docker push ${ecrendpoint}'
+                        sh 'aws ecr get-login-password --region eu-west-3 | docker login --username AWS --password-stdin ${ecrendpoint}'
+                        sh 'docker push ${ecrendpoint}/web'
+                        sh 'docker push ${ecrendpoint}/asgi'
                     }
                 }
             }
         }
         stage('Remove local images after successful push') {
             steps {
-                sh 'docker rmi djangoapp'
+                sh 'docker-compose down --rmi all'
                 }
         }   
     }
