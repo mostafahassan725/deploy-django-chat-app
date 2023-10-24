@@ -1,5 +1,5 @@
 # A light official Python runtime as a base image
-FROM python:3.8-slim-buster
+FROM python:3.9.18-slim
 
 # Set necessary environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -8,6 +8,12 @@ ENV PYTHONUNBUFFERED=1
 # Set the working directory to /app
 RUN mkdir /app
 WORKDIR /app
+
+# Run package updates and install tailwindcss
+RUN apt-get update && apt-get install -y nodejs npm
+RUN npm i browserslist
+RUN npx update-browserslist-db@latest
+RUN npm install -g tailwindcss
 
 # Copy the requirements file into the container at /app
 COPY requirements.txt .
@@ -18,12 +24,19 @@ RUN pip install -r requirements.txt
 # Copy the rest of the application code into the container at /app
 COPY . .
 
+# Expose port 8001 for the ASGI Channels server Daphne to listen on
+ENV ASGI_PORT=8001
+EXPOSE 8001
+
 # Expose port 8000 for the Django app to listen on
 EXPOSE 8000
 
 # Migrate the database models
 RUN python3 manage.py makemigrations --noinput
 RUN python3 manage.py migrate --run-syncdb --noinput
+RUN chmod +x scripts/entrypoint.sh
 
 # Start the Django app when the container launches
-CMD ["nohup","python3","manage.py","runserver","0.0.0.0:8000"]
+ENTRYPOINT ["scripts/entrypoint.sh"]
+
+# CMD ["nohup","python3","manage.py","runserver","0.0.0.0:8000"]

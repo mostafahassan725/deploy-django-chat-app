@@ -2,7 +2,7 @@ version: '3'
 services:
   web:
     env_file:
-      - ./djangoApp/.env
+      - ./.env
     build: .
     container_name: djangoApp
     networks: 
@@ -10,7 +10,19 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - django:/app
+      - django:/app/data
+  asgi:
+    build: .
+    container_name: asgiServer
+    command: daphne -b 0.0.0.0 -p ${ASGI_PORT} djagoChatApp.asgi:application
+    networks:
+      - django-net
+    ports:
+      - ${ASGI_PORT}:${ASGI_PORT}
+    volumes:
+      - django-data:/app/data
+    depends_on:
+      - web
 networks:
   django:
     name: django-net
