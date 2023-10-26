@@ -1,0 +1,21 @@
+---
+- hosts: jenkins
+  become: true
+
+  tasks:
+    # Update packages
+    - name: Update packages
+      yum: name=* state=latest
+      tags: update_packages
+
+    # Retrieve Jenkins initial password
+    - name: Get Jenkins initial password
+      shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: jenkins_password
+      tags: get_jenkins_password
+
+    # Display Jenkins password
+    - name: Display Jenkins password
+      debug:
+        msg: "Jenkins initial password: {{ jenkins_password.stdout }}"
+      tags: display_jenkins_password
