@@ -1,0 +1,74 @@
+---
+- hosts: jenkins_servers
+  tags: update_ec2_packages
+  tasks:
+  - name: Update EC2 packages
+    apt:
+      name: "*"
+      state: latest
+
+---
+- hosts: jenkins_servers
+  tags: retrieve_initial_password
+  tasks:
+  - name: Retrieve Jenkins initial password
+    community.general.jenkins_user:
+      name: admin
+      state: facts
+    register: jenkins_user
+
+---
+- hosts: jenkins_servers
+  tags: create_user_and_password
+  tasks:
+  - name: Create Jenkins user
+    community.general.jenkins_user:
+      name: {{ lookup('env', 'JENKINS_USER') }}
+      password: {{ lookup('env', 'JENKINS_PASSWORD') }}
+
+---
+- hosts: jenkins_servers
+  tags: update_jenkins_server
+  tasks:
+  - name: Update Jenkins package
+    apt:
+      name: jenkins
+      state: latest
+
+  - name: Install Jenkins plugins
+    community.general.jenkins_plugin:
+      name: "{{ item }}"
+      version: "latest"
+      state: present
+    with_items:
+      - git-client
+      - maven-plugin
+      - build-pipeline-plugin
+      - docker-plugin
+      - kubernetes-plugin
+      - slack-plugin
+      - pipeline:git-plugin
+      - pipeline:maven-plugin
+      - pipeline:build-pipeline-plugin
+      - pipeline:docker-plugin
+      - pipeline:kubernetes-plugin
+      - pipeline:slack-plugin
+
+---
+- hosts: jenkins_servers
+  tags: create_pipeline
+  tasks:
+  - name: Create pipeline
+    community.general.jenkins_job:
+      name: docker_build_pipeline
+      job_type: pipeline
+      jenkinsfile: git://github.com/mostafahassan725/deploy-django-chat-app.git/master/jenkins/Jenkinsfile
+
+---
+- hosts: jenkins_servers
+  tags: trigger_pipeline
+  tasks:
+  - name: Trigger pipeline
+    community.general.jenkins_job:
+      name: docker_build_pipeline
+      state: started
