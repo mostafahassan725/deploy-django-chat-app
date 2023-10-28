@@ -9,7 +9,7 @@
 
 ---
 - hosts: jenkins_servers
-  tags: retrieve_initial_password
+  tags: retrieve_initial_jenkins_password
   tasks:
   - name: Retrieve Jenkins initial password
     community.general.jenkins_user:
